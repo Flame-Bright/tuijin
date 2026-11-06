@@ -1,0 +1,557 @@
+:root {
+  --font-ui: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", "Segoe UI", sans-serif;
+  --font-num: "Bahnschrift", "DIN Alternate", "Microsoft YaHei UI", sans-serif;
+  --radius-lg: 20px;
+  --radius-md: 14px;
+  --radius-sm: 10px;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* 字体缩放：由 JS 从 settings.fontScale 写入，default 1 = 标准 */
+  --ui-scale: 1;
+
+  /* 壁纸 */
+  --wallpaper-css: none;
+  --wallpaper-dim: 0.18;
+  --wallpaper-blur: 0px;
+}
+
+/* 根字号随 --ui-scale 变化，页面里一律用 rem 卡字号 */
+html {
+  font-size: calc(16px * var(--ui-scale));
+}
+
+:root,
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f3eee5;
+  --bg-deep: #ebe2d4;
+  --surface: #fffcf7;
+  --surface-2: #f9f3e9;
+  --surface-3: #efe7da;
+  --ink: #292521;
+  --ink-soft: #5f574d;
+  --muted: #93887a;
+  --faint: #b6aa9a;
+  --line: rgba(66, 53, 38, 0.1);
+  --line-strong: rgba(66, 53, 38, 0.17);
+  --accent: #d25f3d;
+  --accent-deep: #b84c2d;
+  --accent-soft: #f6e1d6;
+  --sage: #6e8c69;
+  --danger: #bd4c3f;
+  --danger-soft: #f7dfda;
+  --primary-bg: #2b2723;
+  --primary-ink: #fff9f0;
+  --widget-bg: rgba(255, 252, 246, 0.94);
+  --glass-border: rgba(255, 255, 255, 0.78);
+  --input-bg: rgba(255, 255, 255, 0.55);
+  --shadow: 0 22px 55px rgba(76, 55, 32, 0.15);
+  --card-shadow: 0 8px 22px rgba(76, 55, 32, 0.055);
+  --toast-bg: #2b2723;
+  --toast-ink: #fff9f0;
+  --overlay: rgba(39, 30, 22, 0.32);
+  --scroll: rgba(80, 64, 47, 0.22);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #171512;
+  --bg-deep: #100f0d;
+  --surface: #211e1a;
+  --surface-2: #28241f;
+  --surface-3: #322d26;
+  --ink: #f3ebe1;
+  --ink-soft: #cec3b5;
+  --muted: #978b7c;
+  --faint: #706457;
+  --line: rgba(255, 244, 229, 0.09);
+  --line-strong: rgba(255, 244, 229, 0.17);
+  --accent: #e77b56;
+  --accent-deep: #f08c68;
+  --accent-soft: rgba(231, 123, 86, 0.17);
+  --sage: #91ab88;
+  --danger: #e17b6d;
+  --danger-soft: rgba(225, 123, 109, 0.16);
+  --primary-bg: #f3ebe1;
+  --primary-ink: #211e1a;
+  --widget-bg: rgba(31, 28, 24, 0.94);
+  --glass-border: rgba(255, 255, 255, 0.09);
+  --input-bg: rgba(255, 255, 255, 0.04);
+  --shadow: 0 26px 65px rgba(0, 0, 0, 0.5);
+  --card-shadow: 0 10px 26px rgba(0, 0, 0, 0.18);
+  --toast-bg: #f3ebe1;
+  --toast-ink: #211e1a;
+  --overlay: rgba(0, 0, 0, 0.5);
+  --scroll: rgba(255, 244, 229, 0.19);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: var(--font-ui);
+  color: var(--ink);
+  background: var(--bg);
+  font-size: 14px;
+  line-height: 1.55;
+  overflow: hidden;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+textarea,
+select,
+a {
+  -webkit-app-region: no-drag;
+}
+
+button {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+  outline: none;
+  border: 0;
+  background: transparent;
+}
+
+input,
+textarea {
+  user-select: text;
+}
+
+textarea {
+  resize: none;
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+
+h1,
+h2,
+h3,
+h4,
+p {
+  margin: 0;
+}
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.icon {
+  display: block;
+  flex: 0 0 auto;
+  pointer-events: none;
+}
+
+.drag-region {
+  -webkit-app-region: drag;
+}
+
+.no-drag,
+button,
+input,
+textarea,
+select {
+  -webkit-app-region: no-drag;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scroll);
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+
+.icon-btn {
+  width: 32px;
+  height: 32px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 9px;
+  color: var(--muted);
+  transition: background 0.16s ease, color 0.16s ease, transform 0.16s ease;
+}
+
+.icon-btn:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.icon-btn:active {
+  transform: scale(0.94);
+}
+
+.icon-btn.is-on {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.progress-ring {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+  overflow: visible;
+}
+
+.progress-ring .ring-track {
+  fill: none;
+  stroke: var(--line-strong);
+  stroke-width: 7;
+}
+
+.progress-ring .ring-value {
+  fill: none;
+  stroke-width: 7;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.5s var(--ease), stroke 0.2s ease;
+}
+
+.toast-root {
+  position: fixed;
+  left: 50%;
+  bottom: 26px;
+  z-index: 400;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(420px, 80vw);
+  padding: 10px 15px;
+  border-radius: 11px;
+  background: var(--toast-bg);
+  color: var(--toast-ink);
+  box-shadow: 0 12px 30px rgba(20, 15, 10, 0.22);
+  font-size: 12px;
+  opacity: 0;
+  transform: translateY(8px) scale(0.98);
+  transition: opacity 0.22s ease, transform 0.22s var(--ease);
+}
+
+.toast.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.toast-error {
+  background: var(--danger);
+  color: #fff8f3;
+}
+
+.toast-success {
+  background: var(--sage);
+  color: #fbfdf9;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--muted);
+  background: var(--surface-2);
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  background: currentColor;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ---------------- 强调色 ---------------- */
+
+:root[data-accent="clay"] {
+  --accent: #d25f3d;
+  --accent-deep: #b84c2d;
+  --accent-soft: #f6e1d6;
+}
+
+:root[data-accent="sage"] {
+  --accent: #5f8a5a;
+  --accent-deep: #4a7245;
+  --accent-soft: #e2ecdf;
+}
+
+:root[data-accent="ocean"] {
+  --accent: #3d7fa6;
+  --accent-deep: #2d6488;
+  --accent-soft: #dcebf4;
+}
+
+:root[data-accent="plum"] {
+  --accent: #9a5f8c;
+  --accent-deep: #7d4770;
+  --accent-soft: #f0e0eb;
+}
+
+:root[data-accent="amber"] {
+  --accent: #c1852a;
+  --accent-deep: #a06a1c;
+  --accent-soft: #f6e8d2;
+}
+
+:root[data-accent="ink"] {
+  --accent: #4a5461;
+  --accent-deep: #353d47;
+  --accent-soft: #e3e7ec;
+}
+
+:root[data-theme="dark"][data-accent="clay"] {
+  --accent: #e77b56;
+  --accent-deep: #f08c68;
+  --accent-soft: rgba(231, 123, 86, 0.17);
+}
+
+:root[data-theme="dark"][data-accent="sage"] {
+  --accent: #8db487;
+  --accent-deep: #a3c79d;
+  --accent-soft: rgba(141, 180, 135, 0.18);
+}
+
+:root[data-theme="dark"][data-accent="ocean"] {
+  --accent: #6fa9c9;
+  --accent-deep: #8bbfd9;
+  --accent-soft: rgba(111, 169, 201, 0.18);
+}
+
+:root[data-theme="dark"][data-accent="plum"] {
+  --accent: #c48cb6;
+  --accent-deep: #d5a4c8;
+  --accent-soft: rgba(196, 140, 182, 0.18);
+}
+
+:root[data-theme="dark"][data-accent="amber"] {
+  --accent: #dca94f;
+  --accent-deep: #e9bd6c;
+  --accent-soft: rgba(220, 169, 79, 0.18);
+}
+
+:root[data-theme="dark"][data-accent="ink"] {
+  --accent: #93a2b3;
+  --accent-deep: #a9b7c6;
+  --accent-soft: rgba(147, 162, 179, 0.18);
+}
+
+/* ---------------- 壁纸 ---------------- */
+
+.wallpaper-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: var(--wallpaper-css);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(var(--wallpaper-blur));
+  transform: scale(1.04);
+  transition: opacity 0.25s ease;
+}
+
+/* 模糊边缘会露出底色，稍微放大后裁掉 */
+.wallpaper-layer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(18, 14, 10, var(--wallpaper-dim));
+}
+
+/* 预设渐变。用 data-wallpaper 切换，避免在 JS 里拼长字符串 */
+:root[data-wallpaper="sunrise"] .wallpaper-layer {
+  background-image:
+    radial-gradient(760px 520px at 12% 8%, #fbe0c8, transparent 62%),
+    radial-gradient(620px 460px at 92% 22%, #f7c9b3, transparent 58%),
+    linear-gradient(160deg, #fdf3e6, #f4dcc6 55%, #e9c4ad);
+}
+
+:root[data-wallpaper="dusk"] .wallpaper-layer {
+  background-image:
+    radial-gradient(720px 520px at 18% 12%, #e4c9d6, transparent 60%),
+    radial-gradient(560px 420px at 88% 30%, #b9a8cf, transparent 58%),
+    linear-gradient(158deg, #f3e6ec, #dcc8d6 52%, #b8a6c4);
+}
+
+:root[data-wallpaper="forest"] .wallpaper-layer {
+  background-image:
+    radial-gradient(680px 500px at 16% 10%, #d5e6cf, transparent 60%),
+    radial-gradient(520px 400px at 90% 26%, #b6cfae, transparent 56%),
+    linear-gradient(160deg, #e8f0e2, #cfe0c7 54%, #aec7a6);
+}
+
+:root[data-wallpaper="ocean"] .wallpaper-layer {
+  background-image:
+    radial-gradient(700px 520px at 14% 12%, #cfe4f2, transparent 60%),
+    radial-gradient(560px 430px at 92% 24%, #a9cbdf, transparent 58%),
+    linear-gradient(160deg, #e4f0f8, #c6dcea 54%, #a2c2d6);
+}
+
+:root[data-wallpaper="paper"] .wallpaper-layer {
+  background-image:
+    repeating-linear-gradient(0deg, rgba(120, 100, 74, 0.05) 0 1px, transparent 1px 22px),
+    linear-gradient(168deg, #fbf6ec, #f2e9d8);
+}
+
+:root[data-wallpaper="night"] .wallpaper-layer {
+  background-image:
+    radial-gradient(660px 480px at 20% 10%, #2f3a52, transparent 62%),
+    radial-gradient(520px 420px at 86% 28%, #43395a, transparent 58%),
+    linear-gradient(162deg, #1b2130, #232b3d 52%, #2e3448);
+}
+
+/* 夜间壁纸压暗过头会看不清，单独收一点 */
+:root[data-wallpaper="night"] .wallpaper-layer::after {
+  background: rgba(8, 10, 16, calc(var(--wallpaper-dim) * 0.55));
+}
+
+:root[data-wallpaper="gradient"] .wallpaper-layer {
+  background-image:
+    conic-gradient(from 210deg at 22% 18%, #f8d9c4, #e9d3e0 32%, #cfe0ea 62%, #d9e6cd 82%, #f8d9c4);
+}
+
+:root[data-wallpaper="web"] .wallpaper-layer {
+  background-image:
+    radial-gradient(rgba(120, 100, 74, 0.16) 1px, transparent 1px),
+    linear-gradient(160deg, #f8f2e7, #ece1d0);
+  background-size: 18px 18px, cover;
+}
+
+:root[data-theme="dark"][data-wallpaper="sunrise"] .wallpaper-layer {
+  background-image:
+    radial-gradient(760px 520px at 12% 8%, #4a332b, transparent 62%),
+    radial-gradient(620px 460px at 92% 22%, #5c3a2e, transparent 58%),
+    linear-gradient(160deg, #241c18, #2e231d 55%, #3a2a22);
+}
+
+:root[data-theme="dark"][data-wallpaper="dusk"] .wallpaper-layer {
+  background-image:
+    radial-gradient(720px 520px at 18% 12%, #3b2d3c, transparent 60%),
+    radial-gradient(560px 420px at 88% 30%, #32283f, transparent 58%),
+    linear-gradient(158deg, #1f1a22, #2a2230 52%, #332a3c);
+}
+
+:root[data-theme="dark"][data-wallpaper="forest"] .wallpaper-layer {
+  background-image:
+    radial-gradient(680px 500px at 16% 10%, #26331f, transparent 60%),
+    radial-gradient(520px 400px at 90% 26%, #2c3b25, transparent 56%),
+    linear-gradient(160deg, #171c14, #1e2619 54%, #25301f);
+}
+
+:root[data-theme="dark"][data-wallpaper="ocean"] .wallpaper-layer {
+  background-image:
+    radial-gradient(700px 520px at 14% 12%, #1d2c38, transparent 60%),
+    radial-gradient(560px 430px at 92% 24%, #223441, transparent 58%),
+    linear-gradient(160deg, #121a21, #18242d 54%, #1e2c37);
+}
+
+:root[data-theme="dark"][data-wallpaper="paper"] .wallpaper-layer {
+  background-image:
+    repeating-linear-gradient(0deg, rgba(255, 244, 229, 0.04) 0 1px, transparent 1px 22px),
+    linear-gradient(168deg, #1a1714, #211d18);
+}
+
+:root[data-theme="dark"][data-wallpaper="gradient"] .wallpaper-layer {
+  background-image:
+    conic-gradient(from 210deg at 22% 18%, #3a2a24, #37293a 32%, #24323c 62%, #26331f 82%, #3a2a24);
+}
+
+:root[data-theme="dark"][data-wallpaper="web"] .wallpaper-layer {
+  background-image:
+    radial-gradient(rgba(255, 244, 229, 0.07) 1px, transparent 1px),
+    linear-gradient(160deg, #191612, #211d18);
+  background-size: 18px 18px, cover;
+}
+
+/* ---------------- 桌面形态公共 ---------------- */
+
+/* 宿主用 SetWindowRgn 裁出形状，页面要精确铺满，不留边距 */
+.widget-page {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: transparent;
+}
+

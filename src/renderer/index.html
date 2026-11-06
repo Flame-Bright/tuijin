@@ -1,0 +1,657 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://tuijin.wall https://tuijin.widget; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="data:," />
+    <title>推进</title>
+    <link rel="stylesheet" href="./base.css" />
+    <link rel="stylesheet" href="./main.css" />
+  </head>
+  <body>
+    <div class="wallpaper-layer" aria-hidden="true"></div>
+
+    <div class="app-shell">
+      <header class="titlebar drag-region">
+        <div class="brand">
+          <span class="logo-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path
+                d="M6.6 15.8l3.4-3.5 2.8 2.3 4.2-6"
+                stroke="#fff8f2"
+                stroke-width="1.9"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <circle cx="17.1" cy="8.6" r="1.5" fill="#fff8f2" />
+            </svg>
+          </span>
+          <div class="brand-copy">
+            <span class="brand-name">推进</span>
+            <span class="brand-tag">把模糊的事，推进一步</span>
+          </div>
+        </div>
+
+        <label class="titlebar-search no-drag" for="globalSearch">
+          <svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="m16.5 16.5 4 4"></path>
+          </svg>
+          <input id="globalSearch" type="text" placeholder="搜索一件事…" autocomplete="off" spellcheck="false" />
+          <kbd>Ctrl K</kbd>
+        </label>
+
+        <div class="window-controls no-drag">
+          <button class="window-btn" id="minimizeBtn" type="button" title="最小化" aria-label="最小化">
+            <svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+              <path d="M5 12h14"></path>
+            </svg>
+          </button>
+          <button class="window-btn" id="maximizeBtn" type="button" title="最大化" aria-label="最大化">
+            <svg class="icon" id="maximizeIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round">
+              <rect x="5" y="5" width="14" height="14" rx="1.5"></rect>
+            </svg>
+          </button>
+          <button class="window-btn close" id="closeBtn" type="button" title="收起到托盘" aria-label="收起到托盘">
+            <svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+              <path d="M6 6l12 12M18 6L6 18"></path>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="app-body">
+        <aside class="sidebar">
+          <button class="new-task-btn" id="newTaskBtn" type="button">
+            <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <path d="M12 5v14M5 12h14"></path>
+            </svg>
+            新建一件事
+            <kbd>N</kbd>
+          </button>
+
+          <div class="side-group">
+            <div class="side-label"><span>我的任务</span></div>
+            <nav aria-label="任务筛选">
+              <button class="nav-item active" type="button" data-view="all">
+                <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m12 3 9 5-9 5-9-5 9-5Z"></path>
+                  <path d="m3 13 9 5 9-5"></path>
+                </svg>
+                全部
+                <span class="nav-count" id="allCount">0</span>
+              </button>
+              <button class="nav-item" type="button" data-view="active">
+                <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                  <circle cx="12" cy="12" r="8.5"></circle>
+                  <circle cx="12" cy="12" r="4.5"></circle>
+                  <circle cx="12" cy="12" r="1"></circle>
+                </svg>
+                进行中
+                <span class="nav-count" id="activeCount">0</span>
+              </button>
+              <button class="nav-item" type="button" data-view="done">
+                <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4.5 12.5 9.5 17.5 19.5 6.5"></path>
+                </svg>
+                已完成
+                <span class="nav-count" id="doneCount">0</span>
+              </button>
+            </nav>
+          </div>
+
+          <div class="side-group">
+            <div class="side-label">
+              <span>分类</span>
+              <button type="button" id="clearCategoryBtn" title="清除分类筛选">全部</button>
+            </div>
+            <nav aria-label="分类筛选">
+              <button class="nav-item category-item" type="button" data-category="work">
+                <span class="dot" style="background: #d96c47"></span>
+                工作
+                <span class="nav-count" data-cat-count="work">0</span>
+              </button>
+              <button class="nav-item category-item" type="button" data-category="life">
+                <span class="dot" style="background: #6f8f6b"></span>
+                生活
+                <span class="nav-count" data-cat-count="life">0</span>
+              </button>
+              <button class="nav-item category-item" type="button" data-category="study">
+                <span class="dot" style="background: #5b7fa8"></span>
+                学习
+                <span class="nav-count" data-cat-count="study">0</span>
+              </button>
+              <button class="nav-item category-item" type="button" data-category="idea">
+                <span class="dot" style="background: #a8739d"></span>
+                灵感
+                <span class="nav-count" data-cat-count="idea">0</span>
+              </button>
+            </nav>
+          </div>
+
+          <div class="sidebar-spacer"></div>
+
+          <div class="sidebar-foot">
+            <div class="font-quick" role="group" aria-label="字号快捷调节">
+              <button class="font-quick-btn" type="button" data-action="font-dec" title="缩小字号 (Ctrl -)" aria-label="缩小字号">
+                <svg class="icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
+                  <path d="M6 12h12"></path>
+                </svg>
+              </button>
+              <button class="font-quick-value" type="button" data-action="open-appearance" id="fontQuickValue" title="打开外观设置">字号 100%</button>
+              <button class="font-quick-btn" type="button" data-action="font-inc" title="放大字号 (Ctrl +)" aria-label="放大字号">
+                <svg class="icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
+                  <path d="M12 6v12M6 12h12"></path>
+                </svg>
+              </button>
+            </div>
+            <div class="theme-row" role="group" aria-label="主题">
+              <button class="theme-btn active" type="button" data-theme-set="light">
+                <svg class="icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+                  <circle cx="12" cy="12" r="4"></circle>
+                  <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+                </svg>
+                浅色
+              </button>
+              <button class="theme-btn" type="button" data-theme-set="dark">
+                <svg class="icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 14.2A8 8 0 0 1 9.8 4 8.2 8.2 0 1 0 20 14.2Z"></path>
+                </svg>
+                深色
+              </button>
+            </div>
+            <button class="side-link" id="openAppearanceBtn" type="button" data-action="open-appearance">
+              <svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3a9 9 0 1 0 0 18 1.8 1.8 0 0 0 1.3-3.1 1.8 1.8 0 0 1 1.3-3.1h1.9A3.5 3.5 0 0 0 21 11.3C21 6.7 17 3 12 3Z"></path>
+                <circle cx="8" cy="9.5" r="1.05" fill="currentColor" stroke="none"></circle>
+                <circle cx="12" cy="7.5" r="1.05" fill="currentColor" stroke="none"></circle>
+                <circle cx="16" cy="9.5" r="1.05" fill="currentColor" stroke="none"></circle>
+              </svg>
+              外观与字号
+              <span class="side-link-hint">Ctrl +</span>
+            </button>
+            <button class="side-link" id="openWidgetBtn" type="button">
+              <svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="13" rx="2"></rect>
+                <path d="M8 21h8M12 17v4"></path>
+              </svg>
+              放在桌面
+              <span class="side-link-kbd">Alt ⇧ D</span>
+            </button>
+            <button class="side-link" id="openDataBtn" type="button">
+              <svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H9l2 2h8.5A1.5 1.5 0 0 1 21 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5v-11Z"></path>
+              </svg>
+              数据文件夹
+            </button>
+            <div class="data-note"><span class="dot"></span>本地保存 · 不上传</div>
+          </div>
+        </aside>
+
+        <main class="workspace" id="workspace">
+          <div class="workspace-inner">
+            <section class="hero">
+              <div>
+                <div class="eyebrow" id="dateLine">11月5日 周三</div>
+                <h1><span id="heroGreeting">今天</span>，推进一点就好。</h1>
+                <p class="hero-sub" id="heroSub">把模糊的想法拆成下一小步。</p>
+              </div>
+              <div class="hero-metric" aria-label="总进度">
+                <div class="mini-ring" id="overallRing"></div>
+                <div class="metric-copy">
+                  <span class="metric-label">总进度</span>
+                  <span class="metric-value" id="overallLabel">0 件事在路上</span>
+                </div>
+              </div>
+            </section>
+
+            <form class="composer" id="composer" autocomplete="off">
+              <div class="composer-main">
+                <span class="composer-plus" aria-hidden="true">
+                  <svg class="icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
+                    <path d="M12 5v14M5 12h14"></path>
+                  </svg>
+                </span>
+                <input
+                  class="composer-input"
+                  id="composerInput"
+                  type="text"
+                  maxlength="120"
+                  placeholder="把一件事写下来，慢慢做清楚…"
+                  aria-label="新任务名称"
+                />
+                <button class="composer-submit" type="submit">添加</button>
+              </div>
+              <div class="composer-options">
+                <button class="cat-pill active" type="button" data-composer-cat="life">
+                  <span class="dot" style="background: #6f8f6b"></span>生活
+                </button>
+                <button class="cat-pill" type="button" data-composer-cat="work">
+                  <span class="dot" style="background: #d96c47"></span>工作
+                </button>
+                <button class="cat-pill" type="button" data-composer-cat="study">
+                  <span class="dot" style="background: #5b7fa8"></span>学习
+                </button>
+                <button class="cat-pill" type="button" data-composer-cat="idea">
+                  <span class="dot" style="background: #a8739d"></span>灵感
+                </button>
+                <label class="composer-date-wrap date-field" title="截止日期">
+                  <svg class="icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+                    <rect x="4" y="5.5" width="16" height="15" rx="2"></rect>
+                    <path d="M8 3v5M16 3v5M4 10.5h16"></path>
+                  </svg>
+                  <input id="composerDue" type="date" aria-label="截止日期" />
+                  <span class="date-placeholder">截止日期</span>
+                  <span class="date-display"></span>
+                </label>
+              </div>
+            </form>
+
+            <section>
+              <div class="list-head">
+                <div class="list-title">
+                  <span id="listTitle">全部任务</span>
+                  <span class="list-count" id="listCount">0</span>
+                </div>
+                <div class="list-tools">
+                  <div class="select-wrap">
+                    <select class="quiet-select" id="sortSelect" aria-label="排序方式">
+                      <option value="manual">按创建顺序</option>
+                      <option value="due">按截止日期</option>
+                      <option value="progress">按完成度</option>
+                    </select>
+                    <svg class="icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="m6 9 6 6 6-6"></path>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              <div class="task-grid" id="taskGrid"></div>
+            </section>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <div class="drawer-root" id="drawerRoot" aria-hidden="true">
+      <div class="drawer-backdrop" data-action="close-drawer"></div>
+      <aside class="drawer" role="dialog" aria-modal="true" aria-label="任务详情">
+        <header class="drawer-head">
+          <span class="drawer-kicker">这件事</span>
+          <label class="drawer-cat">
+            <span class="dot" id="drawerCatDot"></span>
+            <select id="detailCategory" aria-label="分类">
+              <option value="work">工作</option>
+              <option value="life">生活</option>
+              <option value="study">学习</option>
+              <option value="idea">灵感</option>
+            </select>
+            <svg class="icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m6 9 6 6 6-6"></path>
+            </svg>
+          </label>
+          <span class="spacer"></span>
+          <button class="icon-btn drawer-close" type="button" data-action="close-drawer" aria-label="关闭详情">
+            <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+              <path d="M6 6l12 12M18 6L6 18"></path>
+            </svg>
+          </button>
+        </header>
+
+        <div class="drawer-body">
+          <textarea
+            id="detailTitle"
+            class="detail-title"
+            rows="1"
+            maxlength="120"
+            placeholder="这件事是什么？"
+          ></textarea>
+          <textarea
+            id="detailNote"
+            class="detail-note"
+            rows="1"
+            maxlength="3000"
+            placeholder="补充一点背景、动机，或者卡住的地方…"
+          ></textarea>
+
+          <section class="progress-card">
+            <div class="detail-ring-wrap" id="detailRingWrap"></div>
+            <div class="progress-info">
+              <h4>完成度</h4>
+              <p class="progress-hint" id="progressHint">拖一拖，或按节点自动计算。</p>
+              <label class="auto-row" id="autoRow">
+                <input type="checkbox" id="autoProgress" />
+                <span class="switch" aria-hidden="true"></span>
+                <span>按节点自动计算</span>
+              </label>
+              <input
+                class="progress-slider"
+                id="progressSlider"
+                type="range"
+                min="0"
+                max="100"
+                step="1"
+                value="0"
+                aria-label="完成度"
+              />
+            </div>
+          </section>
+
+          <div class="detail-meta">
+            <label class="meta-chip date-field" title="截止日期">
+              <svg class="icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+                <rect x="4" y="5.5" width="16" height="15" rx="2"></rect>
+                <path d="M8 3v5M16 3v5M4 10.5h16"></path>
+              </svg>
+              <input type="date" id="detailDue" aria-label="截止日期" />
+              <span class="date-placeholder">设置截止</span>
+              <span class="date-display"></span>
+            </label>
+            <span class="meta-chip static">
+              <svg class="icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+                <circle cx="12" cy="12" r="8.5"></circle>
+                <path d="M12 7v5l3 2"></path>
+              </svg>
+              创建于 <strong id="detailCreated">—</strong>
+            </span>
+            <span class="meta-chip static" id="detailStatusChip">进行中</span>
+          </div>
+
+          <section class="detail-section">
+            <div class="section-head">
+              <h3>节点</h3>
+              <span class="section-count" id="nodeCount">0 / 0</span>
+              <span class="section-note">把下一步拆小一点</span>
+            </div>
+            <div class="node-list" id="nodeList"></div>
+            <form class="node-form" id="nodeForm" autocomplete="off">
+              <input id="nodeInput" type="text" maxlength="120" placeholder="添加一个具体的小节点…" aria-label="节点名称" />
+              <span class="date-field node-date">
+                <input id="nodeDue" type="date" aria-label="节点截止日期" />
+                <span class="date-placeholder">日期</span>
+                <span class="date-display"></span>
+              </span>
+              <button class="node-add" type="submit" aria-label="添加节点">
+                <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
+                  <path d="M12 5v14M5 12h14"></path>
+                </svg>
+              </button>
+            </form>
+          </section>
+        </div>
+
+        <footer class="drawer-foot">
+          <button class="btn btn-sage" id="completeBtn" type="button">
+            <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m5 12.5 4.5 4.5L19 7.5"></path>
+            </svg>
+            <span id="completeBtnText">标记完成</span>
+          </button>
+          <button class="btn-danger-text" id="deleteBtn" type="button">删除这件事</button>
+        </footer>
+      </aside>
+    </div>
+
+    <div class="appearance-root" id="appearanceRoot" aria-hidden="true">
+      <div class="appearance-backdrop" data-action="close-appearance"></div>
+      <aside class="appearance-panel" role="dialog" aria-modal="true" aria-label="外观设置">
+        <header class="appearance-head">
+          <div class="appearance-head-copy">
+            <span class="appearance-kicker">外观</span>
+            <h2 class="appearance-title">看着舒服，才想打开</h2>
+          </div>
+          <button class="icon-btn" type="button" data-action="close-appearance" aria-label="关闭外观设置">
+            <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+              <path d="M6 6l12 12M18 6L6 18"></path>
+            </svg>
+          </button>
+        </header>
+
+        <div class="appearance-body">
+          <section class="setting-group">
+            <div class="setting-head">
+              <h3>字号</h3>
+              <span class="setting-note">文字大一点，眼睛轻松一点</span>
+            </div>
+            <div class="font-row">
+              <button class="font-step" type="button" data-action="font-dec" aria-label="缩小字号">A−</button>
+              <input class="appearance-range" id="fontScaleRange" type="range" min="0.8" max="1.6" step="0.05" value="1" aria-label="界面字号" />
+              <button class="font-step font-step-lg" type="button" data-action="font-inc" aria-label="放大字号">A+</button>
+            </div>
+            <div class="font-meta">
+              <span class="font-value" id="fontScaleLabel">100%</span>
+              <span class="font-hint">Ctrl + / Ctrl − / Ctrl 0</span>
+              <button class="link-btn" type="button" data-action="font-reset">恢复默认</button>
+            </div>
+            <div class="chip-row">
+              <button class="mini-chip" type="button" data-action="font-preset" data-scale="0.9">小 90%</button>
+              <button class="mini-chip" type="button" data-action="font-preset" data-scale="1">标准 100%</button>
+              <button class="mini-chip" type="button" data-action="font-preset" data-scale="1.15">大 115%</button>
+              <button class="mini-chip" type="button" data-action="font-preset" data-scale="1.3">更大 130%</button>
+            </div>
+          </section>
+
+          <section class="setting-group">
+            <div class="setting-head">
+              <h3>主题</h3>
+              <span class="setting-note">白天浅一点，晚上深一点</span>
+            </div>
+            <div class="seg-row" role="group" aria-label="主题">
+              <button class="seg" type="button" data-theme-set="light" data-seg="theme">
+                <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+                  <circle cx="12" cy="12" r="4"></circle>
+                  <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+                </svg>
+                浅色
+              </button>
+              <button class="seg" type="button" data-theme-set="dark" data-seg="theme">
+                <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 14.2A8 8 0 0 1 9.8 4 8.2 8.2 0 1 0 20 14.2Z"></path>
+                </svg>
+                深色
+              </button>
+            </div>
+          </section>
+
+          <section class="setting-group">
+            <div class="setting-head">
+              <h3>强调色</h3>
+              <span class="setting-note">按钮、进度和选中态的颜色</span>
+            </div>
+            <div class="accent-row" role="group" aria-label="强调色">
+              <button class="accent-swatch" type="button" data-accent-set="clay" title="陶土" aria-label="陶土"></button>
+              <button class="accent-swatch" type="button" data-accent-set="sage" title="鼠尾草" aria-label="鼠尾草"></button>
+              <button class="accent-swatch" type="button" data-accent-set="ocean" title="海蓝" aria-label="海蓝"></button>
+              <button class="accent-swatch" type="button" data-accent-set="plum" title="梅紫" aria-label="梅紫"></button>
+              <button class="accent-swatch" type="button" data-accent-set="amber" title="琥珀" aria-label="琥珀"></button>
+              <button class="accent-swatch" type="button" data-accent-set="ink" title="墨灰" aria-label="墨灰"></button>
+            </div>
+          </section>
+
+          <section class="setting-group">
+            <div class="setting-head">
+              <h3>桌面形态</h3>
+              <span class="setting-note">桌面上那个小东西的样子，改完会跟着变</span>
+            </div>
+            <div class="shape-row" role="group" aria-label="桌面形态">
+              <button class="shape-card" type="button" data-widget-style="ball">
+                <span class="shape-preview shape-preview-ball" aria-hidden="true">
+                  <span class="shape-ball-ring"></span>
+                </span>
+                <span class="shape-name">悬浮球</span>
+                <span class="shape-desc">一个圆，只看总进度</span>
+              </button>
+              <button class="shape-card" type="button" data-widget-style="buddy">
+                <span class="shape-preview shape-preview-buddy" aria-hidden="true">
+                  <span class="buddy-face">
+                    <span class="buddy-eye"></span>
+                    <span class="buddy-eye"></span>
+                  </span>
+                </span>
+                <span class="shape-name">卡通人</span>
+                <span class="shape-desc">会跟着进度变表情</span>
+              </button>
+              <button class="shape-card" type="button" data-widget-style="custom">
+                <span class="shape-preview shape-preview-custom" aria-hidden="true"></span>
+                <span class="shape-name">自己的图</span>
+                <span class="shape-desc">上传一张喜欢的图</span>
+              </button>
+            </div>
+
+            <div class="widget-custom-row" id="widgetCustomRow">
+              <div class="widget-custom-image">
+                <div class="widget-custom-thumb" id="widgetCustomThumb" aria-hidden="true"></div>
+                <div class="widget-custom-copy">
+                  <span class="widget-custom-file" id="widgetCustomName">还没有选图片</span>
+                  <div class="widget-custom-actions">
+                    <button class="mini-btn" type="button" id="widgetCustomPickBtn">选择图片…</button>
+                    <button class="link-btn" type="button" id="widgetCustomClearBtn">移除图片</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="chip-row" role="group" aria-label="图片契合方式">
+                <button class="mini-chip" type="button" data-widget-fit="cover">铺满</button>
+                <button class="mini-chip" type="button" data-widget-fit="contain">完整</button>
+              </div>
+
+              <label class="slider-row">
+                <span class="slider-label">压暗</span>
+                <input class="appearance-range" id="widgetCustomDimRange" type="range" min="0" max="60" step="1" value="12" aria-label="自定义图片压暗" />
+                <span class="slider-value" id="widgetCustomDimLabel">12%</span>
+              </label>
+
+              <label class="check-row">
+                <input type="checkbox" id="widgetCustomShowText" />
+                <span class="switch" aria-hidden="true"></span>
+                <span>显示进度和文字</span>
+              </label>
+
+              <p class="setting-hint">
+                不选图的话，桌面上还是那个卡通人；图只换桌面浮层，不影响工作台壁纸。
+              </p>
+            </div>
+
+            <label class="check-row">
+              <input type="checkbox" id="widgetVisibleSwitch" />
+              <span class="switch" aria-hidden="true"></span>
+              <span>在桌面显示悬浮球</span>
+            </label>
+            <p class="setting-hint">
+              关掉之后，桌面上就不放它了，工作台照常能用；想叫回来，点托盘图标或按
+              <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>D</kbd>。
+            </p>
+          </section>
+
+          <section class="setting-group">
+            <div class="setting-head">
+              <h3>浮层大小</h3>
+              <span class="setting-note">觉得占地方就调小一点</span>
+            </div>
+            <div class="size-row" role="group" aria-label="浮层大小">
+              <button class="size-card" type="button" data-widget-size="small">
+                <span class="size-dot size-dot-sm" aria-hidden="true"></span>
+                <span class="size-name">小</span>
+              </button>
+              <button class="size-card" type="button" data-widget-size="medium">
+                <span class="size-dot size-dot-md" aria-hidden="true"></span>
+                <span class="size-name">中</span>
+              </button>
+              <button class="size-card" type="button" data-widget-size="large">
+                <span class="size-dot size-dot-lg" aria-hidden="true"></span>
+                <span class="size-name">大</span>
+              </button>
+            </div>
+
+            <label class="check-row">
+              <input type="checkbox" id="widgetPinnedSwitch" />
+              <span class="switch" aria-hidden="true"></span>
+              <span>始终显示在其他窗口上方</span>
+            </label>
+            <p class="setting-hint">
+              关掉之后，点开别的软件它就会被挡住，看起来像「不见了」——其实还在，从托盘图标或按
+              <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>D</kbd> 就能叫回来。点开它本身也会自动浮到最前。
+            </p>
+          </section>
+
+          <section class="setting-group">
+            <div class="setting-head">
+              <h3>壁纸</h3>
+              <span class="setting-note">让工作台有点自己的样子</span>
+            </div>
+
+            <div class="seg-row" role="group" aria-label="壁纸来源">
+              <button class="seg" type="button" data-wallpaper-kind="none">无</button>
+              <button class="seg" type="button" data-wallpaper-kind="preset">预设</button>
+              <button class="seg" type="button" data-wallpaper-kind="image">自定义图片</button>
+            </div>
+
+            <div class="wallpaper-presets" id="wallpaperPresetRow" role="group" aria-label="预设壁纸">
+              <button class="wp-swatch" type="button" data-wallpaper-preset="sunrise" title="日出" aria-label="日出"><span>日出</span></button>
+              <button class="wp-swatch" type="button" data-wallpaper-preset="dusk" title="黄昏" aria-label="黄昏"><span>黄昏</span></button>
+              <button class="wp-swatch" type="button" data-wallpaper-preset="forest" title="林间" aria-label="林间"><span>林间</span></button>
+              <button class="wp-swatch" type="button" data-wallpaper-preset="ocean" title="海面" aria-label="海面"><span>海面</span></button>
+              <button class="wp-swatch" type="button" data-wallpaper-preset="paper" title="纸感" aria-label="纸感"><span>纸感</span></button>
+              <button class="wp-swatch" type="button" data-wallpaper-preset="night" title="夜色" aria-label="夜色"><span>夜色</span></button>
+              <button class="wp-swatch" type="button" data-wallpaper-preset="gradient" title="渐层" aria-label="渐层"><span>渐层</span></button>
+              <button class="wp-swatch" type="button" data-wallpaper-preset="web" title="网点" aria-label="网点"><span>网点</span></button>
+            </div>
+
+            <div class="wallpaper-image-row" id="wallpaperImageRow">
+              <div class="wallpaper-thumb" id="wallpaperThumb" aria-hidden="true"></div>
+              <div class="wallpaper-image-copy">
+                <span class="wallpaper-file" id="wallpaperFileName">还没有选图片</span>
+                <div class="wallpaper-image-actions">
+                  <button class="mini-btn" type="button" data-action="pick-wallpaper">选择图片…</button>
+                  <button class="link-btn" type="button" data-action="clear-wallpaper">移除</button>
+                </div>
+              </div>
+            </div>
+
+            <label class="slider-row">
+              <span class="slider-label">压暗</span>
+              <input class="appearance-range" id="wallpaperDimRange" type="range" min="0" max="0.8" step="0.02" value="0.18" aria-label="壁纸压暗" />
+              <span class="slider-value" id="wallpaperDimLabel">18%</span>
+            </label>
+            <label class="slider-row">
+              <span class="slider-label">模糊</span>
+              <input class="appearance-range" id="wallpaperBlurRange" type="range" min="0" max="24" step="1" value="0" aria-label="壁纸模糊" />
+              <span class="slider-value" id="wallpaperBlurLabel">0</span>
+            </label>
+
+            <label class="check-row">
+              <input type="checkbox" id="wallpaperOnMain" />
+              <span class="switch" aria-hidden="true"></span>
+              <span>壁纸也铺到这个工作台</span>
+            </label>
+          </section>
+        </div>
+
+        <footer class="appearance-foot">
+          <button class="btn btn-soft" type="button" data-action="reset-appearance">恢复默认外观</button>
+          <span class="appearance-foot-note">改动会立刻保存</span>
+        </footer>
+      </aside>
+    </div>
+
+    <div class="modal-root" id="modalRoot" aria-hidden="true">
+      <div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalCopy">
+        <h3 id="modalTitle">删除这件事？</h3>
+        <p id="modalCopy">这件事和它的所有节点都会被删除，无法恢复。</p>
+        <div class="modal-actions">
+          <button class="btn btn-soft" type="button" data-action="close-modal">再想想</button>
+          <button class="btn btn-danger" type="button" id="confirmDeleteBtn">删除</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast-root" id="toastRoot"></div>
+
+    <script src="./webview-api.js"></script>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

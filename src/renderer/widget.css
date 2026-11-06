@@ -1,0 +1,1480 @@
+/* ==========================================================================
+   推进 · 桌面浮层
+   三种形态由 html[data-widget-style] 切换，宿主用 SetWindowRgn 裁形状，
+   窗口没有透明通道：每个形态都必须精确铺满 100% × 100%，圆形自己画成圆。
+   ========================================================================== */
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: transparent !important;
+}
+
+.widget-body {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  overflow: hidden;
+  letter-spacing: 0.01em;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* 壁纸永远铺满，形态各自在上面做玻璃层。
+   窗口本身已被 SetWindowRgn 裁形，这里再按形态裁一次圆角，
+   避免半透明外壳之外露出一圈矩形壁纸边。 */
+.wallpaper-layer {
+  z-index: 0;
+}
+
+html[data-widget-style="ball"] .wallpaper-layer {
+  border-radius: 50%;
+}
+
+html[data-widget-style="buddy"] .wallpaper-layer {
+  border-radius: 28px;
+}
+
+html[data-widget-style="expanded"] .wallpaper-layer {
+  border-radius: 22px;
+}
+
+/* ---------------- 形态外壳 ---------------- */
+
+/* .stage 只负责定位，不画背景、不加 backdrop-filter：
+   玻璃层由各个形态自己（.ball-disc / .stage-buddy / .stage-expanded）画一层，
+   叠两层会把壁纸冲淡成一片白。窗口没透明通道，圆外的角落靠 SetWindowRgn 裁掉，
+   这里再把 .wallpaper-layer 裁成同形状，保证预览和实机观感一致。 */
+.stage {
+  display: none;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  touch-action: none;
+  cursor: grab;
+  background: transparent;
+}
+
+.stage.is-dragging,
+.stage.is-dragging * {
+  cursor: grabbing !important;
+}
+
+html[data-widget-style="ball"] .stage-ball {
+  display: grid;
+  place-items: center;
+}
+
+html[data-widget-style="buddy"] .stage-buddy,
+html[data-widget-style="custom"] .stage-custom {
+  display: flex;
+}
+
+html[data-widget-style="expanded"] .stage-expanded {
+  display: flex;
+  cursor: default;
+}
+
+/* ==========================================================================
+   ball · 136 × 136 悬浮球（窗口已被裁成椭圆，这里画满即圆）
+   ========================================================================== */
+
+.stage-ball {
+  padding: 0;
+  border-radius: 50%;
+  /* 球自己就是圆的，backdrop 只在圆内生效 */
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* 球体玻璃：半透明，让下面的壁纸透上来。
+   不用 --widget-bg（0.94 近乎实心），改用表面色的低透明度版本。 */
+.ball-disc {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(
+      118% 118% at 30% 14%,
+      color-mix(in srgb, #ffffff 26%, transparent),
+      transparent 64%
+    ),
+    color-mix(in srgb, var(--surface) 30%, transparent);
+  box-shadow:
+    inset 0 0 0 1px var(--glass-border),
+    inset 0 -0.5rem 1.2rem rgba(76, 55, 32, 0.09);
+  backdrop-filter: blur(10px) saturate(1.75);
+  -webkit-backdrop-filter: blur(10px) saturate(1.75);
+  transition: transform 0.24s var(--ease), box-shadow 0.24s ease;
+}
+
+/* 没壁纸时球体要更实，否则桌面上就一块灰 */
+html[data-wallpaper="none"] .ball-disc {
+  background:
+    radial-gradient(
+      120% 120% at 30% 16%,
+      color-mix(in srgb, #ffffff 62%, transparent),
+      transparent 62%
+    ),
+    color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+}
+
+html[data-theme="dark"] .ball-disc {
+  background:
+    radial-gradient(
+      120% 120% at 30% 16%,
+      color-mix(in srgb, #ffffff 8%, transparent),
+      transparent 62%
+    ),
+    color-mix(in srgb, var(--surface) 38%, transparent);
+  box-shadow:
+    inset 0 0 0 1px var(--glass-border),
+    inset 0 -0.5rem 1.2rem rgba(0, 0, 0, 0.32);
+}
+
+html[data-theme="dark"][data-wallpaper="none"] .ball-disc {
+  background:
+    radial-gradient(
+      120% 120% at 30% 16%,
+      color-mix(in srgb, #ffffff 8%, transparent),
+      transparent 62%
+    ),
+    color-mix(in srgb, var(--surface) 90%, transparent);
+}
+
+/* 手绘纸纹：让球面不是纯色 */
+.ball-grain {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image:
+    radial-gradient(rgba(92, 71, 48, 0.12) 0.5px, transparent 0.5px),
+    radial-gradient(rgba(92, 71, 48, 0.08) 0.5px, transparent 0.5px);
+  background-size: 5px 5px, 9px 9px;
+  background-position: 0 0, 3px 4px;
+}
+
+html[data-theme="dark"] .ball-grain {
+  opacity: 0.28;
+  background-image:
+    radial-gradient(rgba(255, 245, 230, 0.14) 0.5px, transparent 0.5px),
+    radial-gradient(rgba(255, 245, 230, 0.1) 0.5px, transparent 0.5px);
+}
+
+.stage-ball:hover .ball-disc {
+  transform: scale(1.025);
+}
+
+.stage-ball:active .ball-disc {
+  transform: scale(0.985);
+}
+
+.stage-ball.is-dragging .ball-disc {
+  transform: scale(0.97);
+  box-shadow:
+    inset 0 0 0 1px var(--glass-border),
+    0 0.6rem 1.4rem rgba(41, 29, 18, 0.24);
+}
+
+.ball-ring {
+  position: absolute;
+  inset: 5%;
+  width: 90%;
+  height: 90%;
+  overflow: visible;
+}
+
+.ball-ring .ring-track {
+  stroke: var(--line-strong);
+  stroke-width: 6.4;
+}
+
+.ball-ring .ring-value {
+  stroke: var(--accent);
+  stroke-width: 6.4;
+}
+
+.ball-core {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.06rem;
+  line-height: 1;
+  pointer-events: none;
+  max-width: 78%;
+}
+
+.ball-pct {
+  font-family: var(--font-num);
+  font-size: 1.72rem;
+  font-weight: 700;
+  line-height: 0.96;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.pct-sign {
+  font-size: 0.56em;
+  font-weight: 600;
+  letter-spacing: 0;
+  margin-left: 0.04em;
+  color: var(--muted);
+}
+
+.ball-meta {
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--accent);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* 全部完成时件数文字换成功的绿，和圆环一致 */
+html[data-widget-style="ball"] .stage-ball.is-done .ball-meta {
+  color: var(--sage);
+}
+
+html[data-widget-style="ball"] .stage-ball.is-done .ball-ring .ring-value {
+  stroke: var(--sage);
+}
+
+/* ==========================================================================
+   buddy · 176 × 208 卡通人
+   ========================================================================== */
+
+.stage-buddy {
+  --bud-skin: #f8ddc4;
+  --bud-skin-shade: #e9c4a4;
+  --bud-line: var(--ink-soft);
+  --bud-cloth: var(--accent);
+  --bud-cloth-soft: color-mix(in srgb, var(--accent) 62%, #ffd9a6);
+
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-end;
+  gap: 0.3rem;
+  padding: 0.5rem 0.5rem 0.6rem;
+  border-radius: 28px;
+  /* 半透明玻璃，壁纸从底下透上来 */
+  background:
+    radial-gradient(
+      150% 110% at 26% 6%,
+      color-mix(in srgb, #ffffff 22%, transparent),
+      transparent 66%
+    ),
+    color-mix(in srgb, var(--surface) 28%, transparent);
+  box-shadow:
+    inset 0 0 0 1px var(--glass-border),
+    inset 0 -0.7rem 1.6rem rgba(76, 55, 32, 0.07);
+  backdrop-filter: blur(12px) saturate(1.7);
+  -webkit-backdrop-filter: blur(12px) saturate(1.7);
+}
+
+html[data-wallpaper="none"] .stage-buddy {
+  background:
+    radial-gradient(
+      150% 110% at 26% 6%,
+      color-mix(in srgb, #ffffff 48%, transparent),
+      transparent 64%
+    ),
+    color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+}
+
+html[data-theme="dark"] .stage-buddy {
+  --bud-skin: #e5c0a1;
+  --bud-skin-shade: #c99e7c;
+  --bud-cloth-soft: color-mix(in srgb, var(--accent) 58%, #f0c88a);
+  background:
+    radial-gradient(
+      150% 110% at 26% 6%,
+      color-mix(in srgb, #ffffff 7%, transparent),
+      transparent 64%
+    ),
+    color-mix(in srgb, var(--surface) 38%, transparent);
+  box-shadow:
+    inset 0 0 0 1px var(--glass-border),
+    inset 0 -0.7rem 1.6rem rgba(0, 0, 0, 0.32);
+}
+
+html[data-theme="dark"][data-wallpaper="none"] .stage-buddy {
+  background:
+    radial-gradient(
+      150% 110% at 26% 6%,
+      color-mix(in srgb, #ffffff 6%, transparent),
+      transparent 64%
+    ),
+    color-mix(in srgb, var(--surface) 90%, transparent);
+}
+
+.stage-buddy:hover {
+  filter: brightness(1.02);
+}
+
+.stage-buddy.is-dragging {
+  filter: brightness(0.99);
+}
+
+.buddy-art {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+}
+
+/* 绝对定位铺满，避免 SVG 按固有宽高比把布局撑出容器 */
+.buddy-svg {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  transform-origin: 50% 88%;
+}
+
+/* 手绘线稿 */
+.buddy-svg .ln {
+  stroke: var(--bud-line);
+  stroke-width: 2.3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+
+.buddy-svg .ground {
+  stroke: var(--faint);
+  stroke-width: 1.8;
+  opacity: 0.55;
+}
+
+.buddy-svg .fl-skin {
+  fill: var(--bud-skin);
+  stroke: var(--bud-skin-shade);
+  stroke-width: 1.1;
+}
+
+.buddy-svg .fl-cloth {
+  fill: var(--bud-cloth);
+  fill-opacity: 0.92;
+  stroke: var(--accent-deep);
+  stroke-width: 1.1;
+}
+
+.buddy-svg .fl-accent {
+  fill: var(--accent);
+}
+
+.buddy-svg .fl-ink {
+  fill: var(--bud-line);
+}
+
+.buddy-svg .sigh {
+  opacity: 0.55;
+}
+
+.buddy-svg .sweat {
+  opacity: 0.85;
+}
+
+.buddy-svg .trail {
+  stroke-dasharray: 2 5;
+  opacity: 0.5;
+}
+
+.buddy-svg .confetti {
+  opacity: 0.8;
+}
+
+/* 表情/姿态：由 data-mood 决定显示哪一组。
+   SVG 里别用 display:block，inline 才是跨浏览器安全值。 */
+.buddy-svg .pose {
+  display: none;
+}
+
+.stage-buddy[data-mood="slump"] .pose-slump,
+.stage-buddy[data-mood="rise"] .pose-rise,
+.stage-buddy[data-mood="work"] .pose-work,
+.stage-buddy[data-mood="near"] .pose-near,
+.stage-buddy[data-mood="party"] .pose-party {
+  display: inline;
+}
+
+/* 呼吸 / 磨蹭 / 蹦跳：只动外框 transform，不去搅 SVG 滤镜 */
+.stage-buddy[data-mood="slump"] .buddy-svg {
+  animation: bud-breathe 4.6s ease-in-out infinite;
+}
+
+.stage-buddy[data-mood="rise"] .buddy-svg {
+  animation: bud-rise 3.2s ease-in-out infinite;
+}
+
+.stage-buddy[data-mood="work"] .buddy-svg {
+  animation: bud-push 1.5s ease-in-out infinite;
+}
+
+.stage-buddy[data-mood="near"] .buddy-svg {
+  animation: bud-sway 2.6s ease-in-out infinite;
+}
+
+.stage-buddy[data-mood="party"] .buddy-svg {
+  animation: bud-jump 1.25s cubic-bezier(0.3, 0, 0.4, 1) infinite;
+}
+
+@keyframes bud-breathe {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  50% { transform: translateY(0.06rem) scale(1.012, 0.988); }
+}
+
+@keyframes bud-rise {
+  0%, 100% { transform: translateY(0) rotate(-1.2deg); }
+  50% { transform: translateY(-0.1rem) rotate(1.2deg); }
+}
+
+@keyframes bud-push {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  35% { transform: translateX(0.16rem) rotate(0.8deg); }
+  70% { transform: translateX(-0.04rem) rotate(-0.6deg); }
+}
+
+@keyframes bud-sway {
+  0%, 100% { transform: translateY(0) rotate(-1.6deg); }
+  50% { transform: translateY(-0.12rem) rotate(1.6deg); }
+}
+
+@keyframes bud-jump {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  18% { transform: translateY(0.02rem) scale(1.03, 0.96); }
+  55% { transform: translateY(-0.3rem) scale(0.985, 1.015); }
+  82% { transform: translateY(0) scale(1.02, 0.98); }
+}
+
+.buddy-info {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.08rem;
+  text-align: center;
+  pointer-events: none;
+}
+
+.buddy-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.3rem;
+  max-width: 100%;
+}
+
+.buddy-pct {
+  font-family: var(--font-num);
+  font-size: 1.26rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.buddy-mood {
+  font-size: 0.56rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.buddy-label {
+  max-width: 100%;
+  font-size: 0.54rem;
+  line-height: 1.4;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stage-buddy[data-mood="party"] .buddy-mood {
+  color: var(--sage);
+}
+
+/* ==========================================================================
+   custom · 176 × 208 用户自己的图（和 buddy 同尺寸同圆角）
+   窗口没有透明通道，所以图片必须铺满整块，圆角靠窗口形状裁。
+   ========================================================================== */
+
+.stage-custom {
+  --cu-dim: 0.12;
+  --cu-radius: 28px;
+
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-end;
+  gap: 0;
+  padding: 0;
+  border-radius: var(--cu-radius);
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  box-shadow: inset 0 0 0 1px var(--glass-border);
+  overflow: hidden;
+}
+
+/* 图片铺满整块，文字浮在上面 */
+.custom-shot {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--cu-radius);
+  overflow: hidden;
+  background: color-mix(in srgb, var(--surface) 70%, var(--accent) 12%);
+}
+
+.custom-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* 完整显示模式：不裁切，留白用底色填 */
+.stage-custom[data-fit="contain"] .custom-img {
+  object-fit: contain;
+}
+
+/* 压暗层：保证底部进度和文字读得清 */
+.custom-shade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: var(--cu-radius);
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(28, 22, 16, calc(var(--cu-dim) * 0.55)) 0%,
+      rgba(28, 22, 16, calc(var(--cu-dim) * 0.2)) 42%,
+      rgba(28, 22, 16, calc(0.42 + var(--cu-dim) * 0.45)) 100%
+    );
+}
+
+/* 还没选图时的占位，不让窗口是一片空白 */
+.custom-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.24rem;
+  color: var(--muted);
+  font-size: 0.52rem;
+  letter-spacing: 0.02em;
+}
+
+.custom-empty svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  opacity: 0.55;
+}
+
+.stage-custom.has-image .custom-empty {
+  display: none;
+}
+
+/* 底部文字：压在压暗层上 */
+.custom-info {
+  position: relative;
+  z-index: 2;
+  flex: 0 0 auto;
+  padding: 0 0.5rem 0.55rem;
+  pointer-events: none;
+}
+
+.stage-custom[data-show-text="false"] .custom-info {
+  display: none;
+}
+
+.custom-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.3rem;
+  max-width: 100%;
+}
+
+.custom-pct {
+  font-family: var(--font-num);
+  font-size: 1.26rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: #fffdf9;
+  text-shadow: 0 1px 6px rgba(20, 14, 8, 0.55);
+}
+
+.custom-meta {
+  font-size: 0.56rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgba(255, 253, 249, 0.92);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 6px rgba(20, 14, 8, 0.55);
+}
+
+/* 浅色主题下压暗层偏深，文字统一用近白；深色主题略微降低亮度 */
+html[data-theme="dark"] .stage-custom {
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+}
+
+html[data-theme="dark"] .custom-pct,
+html[data-theme="dark"] .custom-meta {
+  color: rgba(255, 251, 245, 0.95);
+}
+
+.stage-custom:hover {
+  filter: brightness(1.02);
+}
+
+.stage-custom.is-dragging {
+  filter: brightness(0.99);
+}
+
+html[data-widget-style="custom"] .wallpaper-layer {
+  border-radius: 28px;
+}
+
+/* ==========================================================================
+   expanded · 384 × 580 详情面板
+   ========================================================================== */
+
+.stage-expanded {
+  flex-direction: column;
+  align-items: stretch;
+  padding: 0;
+  border-radius: 22px;
+  /* 比收起态更透一点：面板大，壁纸看得见才好看 */
+  background:
+    radial-gradient(
+      140% 90% at 20% 0%,
+      color-mix(in srgb, #ffffff 20%, transparent),
+      transparent 64%
+    ),
+    color-mix(in srgb, var(--surface) 30%, transparent);
+  box-shadow: inset 0 0 0 1px var(--glass-border);
+  backdrop-filter: blur(13px) saturate(1.8);
+  -webkit-backdrop-filter: blur(13px) saturate(1.8);
+}
+
+html[data-wallpaper="none"] .stage-expanded {
+  background:
+    radial-gradient(
+      140% 90% at 20% 0%,
+      color-mix(in srgb, #ffffff 44%, transparent),
+      transparent 62%
+    ),
+    color-mix(in srgb, var(--surface) 94%, transparent);
+  backdrop-filter: blur(22px) saturate(1.2);
+  -webkit-backdrop-filter: blur(22px) saturate(1.2);
+}
+
+html[data-theme="dark"] .stage-expanded {
+  background:
+    radial-gradient(
+      140% 90% at 20% 0%,
+      color-mix(in srgb, #ffffff 6%, transparent),
+      transparent 62%
+    ),
+    color-mix(in srgb, var(--surface) 40%, transparent);
+  box-shadow: inset 0 0 0 1px var(--glass-border);
+}
+
+html[data-theme="dark"][data-wallpaper="none"] .stage-expanded {
+  background:
+    radial-gradient(
+      140% 90% at 20% 0%,
+      color-mix(in srgb, #ffffff 6%, transparent),
+      transparent 62%
+    ),
+    color-mix(in srgb, var(--surface) 92%, transparent);
+}
+
+/* ---- 头部（同时是拖动条） ---- */
+
+.x-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.66rem 0.55rem 0.36rem 0.78rem;
+  cursor: grab;
+  touch-action: none;
+}
+
+.x-head:active {
+  cursor: grabbing;
+}
+
+.x-logo {
+  flex: 0 0 auto;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: grid;
+  place-items: center;
+  border-radius: 0.44rem;
+  color: #fff8f2;
+  background: linear-gradient(145deg, var(--accent), var(--accent-deep));
+  box-shadow: 0 0.2rem 0.5rem color-mix(in srgb, var(--accent) 34%, transparent);
+}
+
+.x-logo svg {
+  width: 1.02rem;
+  height: 1.02rem;
+}
+
+.x-brand {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.04rem;
+}
+
+.x-name {
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.2em;
+}
+
+.x-date {
+  font-size: 0.52rem;
+  line-height: 1.2;
+  color: var(--muted);
+  letter-spacing: 0.03em;
+}
+
+.x-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.05rem;
+}
+
+.x-actions .icon-btn {
+  width: 1.62rem;
+  height: 1.62rem;
+  border-radius: 0.44rem;
+}
+
+.x-actions .icon-btn svg {
+  width: 0.92rem;
+  height: 0.92rem;
+}
+
+.x-actions .icon-btn.is-on {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+#xCollapse {
+  color: var(--ink-soft);
+}
+
+#xCollapse:hover {
+  color: var(--accent);
+}
+
+/* ---- 置顶提示 ---- */
+
+.x-pin-hint {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin: 0 0.62rem 0.42rem;
+  padding: 0.375rem 0.5rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 38%, transparent);
+  border-radius: 0.625rem;
+  background: color-mix(in srgb, var(--accent-soft) 78%, transparent);
+  color: var(--ink-soft);
+  font-size: 0.625rem;
+  line-height: 1.5;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.16s ease, border-color 0.16s ease;
+}
+
+.x-pin-hint[hidden] {
+  display: none;
+}
+
+.x-pin-hint:hover {
+  border-color: var(--accent);
+}
+
+.x-pin-hint svg {
+  flex: 0 0 auto;
+  width: 0.75rem;
+  height: 0.75rem;
+  color: var(--accent);
+}
+
+.x-pin-hint span:first-of-type {
+  flex: 1;
+  min-width: 0;
+}
+
+.x-pin-hint kbd {
+  display: inline-block;
+  padding: 0 0.1875rem;
+  margin: 0 0.0625rem;
+  border-radius: 3px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  font-family: inherit;
+  font-size: 0.5625rem;
+}
+
+.x-pin-hint-act {
+  flex: 0 0 auto;
+  padding: 0.0625rem 0.375rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff8f2;
+  font-size: 0.5938rem;
+  font-weight: 600;
+}
+
+/* ---- 概览 ---- */
+
+.x-summary {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.62rem;
+  margin: 0 0.62rem 0.42rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 0.72rem;
+  background: color-mix(in srgb, var(--surface) 46%, transparent);
+}
+
+.x-ring-wrap {
+  position: relative;
+  flex: 0 0 auto;
+  width: 2.85rem;
+  height: 2.85rem;
+  display: grid;
+  place-items: center;
+}
+
+.x-ring {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.x-ring .ring-track {
+  stroke: var(--line-strong);
+  stroke-width: 8;
+}
+
+.x-ring .ring-value {
+  stroke: var(--accent);
+  stroke-width: 8;
+}
+
+.x-ring-pct {
+  position: absolute;
+  font-family: var(--font-num);
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.x-sum-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.x-sum-top {
+  display: flex;
+  align-items: baseline;
+  gap: 0.34rem;
+}
+
+.x-sum-note {
+  font-size: 0.64rem;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.x-sum-due {
+  margin-left: auto;
+  flex: 0 0 auto;
+  font-size: 0.5rem;
+  font-weight: 600;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.x-sum-due.is-empty {
+  display: none;
+}
+
+.x-sum-bar {
+  height: 0.17rem;
+  margin: 0.28rem 0 0.22rem;
+  border-radius: 999px;
+  background: var(--surface-3);
+  overflow: hidden;
+}
+
+.x-sum-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    var(--accent),
+    color-mix(in srgb, var(--accent) 58%, #f0b26b)
+  );
+  transition: width 0.45s var(--ease);
+}
+
+.x-sum-sub {
+  font-size: 0.5rem;
+  line-height: 1.45;
+  color: var(--faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---- 切换 ---- */
+
+.x-tabs {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 0.14rem;
+  margin: 0 0.62rem 0.34rem;
+  padding: 0.14rem;
+  border-radius: 0.5rem;
+  background: var(--surface-2);
+}
+
+.x-tab {
+  flex: 1;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.26rem;
+  border-radius: 0.4rem;
+  color: var(--muted);
+  font-size: 0.6rem;
+  font-weight: 500;
+  transition: background 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.x-tab:hover {
+  color: var(--ink);
+}
+
+.x-tab.is-active {
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(48, 34, 20, 0.09);
+}
+
+.x-tab-count {
+  font-family: var(--font-num);
+  font-size: 0.52rem;
+  opacity: 0.68;
+}
+
+/* ---- 列表 ---- */
+
+.x-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 0.32rem 0.14rem 0.42rem;
+  overscroll-behavior: contain;
+}
+
+.x-list::-webkit-scrollbar {
+  width: 7px;
+}
+
+.x-list::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+}
+
+.x-card {
+  --cat-color: var(--accent);
+  --cat-tint: transparent;
+  position: relative;
+  margin-bottom: 0.28rem;
+  padding: 0.46rem 0.52rem 0.44rem;
+  border: 1px solid transparent;
+  border-radius: 0.6rem;
+  cursor: pointer;
+  background: transparent;
+  transition: background 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
+}
+
+.x-card:hover {
+  background: color-mix(in srgb, var(--surface) 56%, transparent);
+  border-color: var(--line);
+}
+
+.x-card:active {
+  transform: scale(0.996);
+}
+
+.x-card-top {
+  display: flex;
+  align-items: center;
+  gap: 0.32rem;
+}
+
+.x-cat-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.5rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--cat-color);
+}
+
+.x-cat-tag .dot {
+  width: 0.24rem;
+  height: 0.24rem;
+}
+
+.x-due {
+  font-size: 0.5rem;
+  color: var(--faint);
+  white-space: nowrap;
+}
+
+.x-due.overdue {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.x-due.today {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.x-pct {
+  margin-left: auto;
+  font-family: var(--font-num);
+  font-size: 0.66rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  color: var(--cat-color);
+}
+
+.x-title {
+  margin: 0.2rem 0 0.32rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1.42;
+  letter-spacing: 0.004em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+}
+
+.x-bar {
+  height: 0.17rem;
+  border-radius: 999px;
+  background: var(--surface-3);
+  overflow: hidden;
+}
+
+.x-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--cat-color);
+  transition: width 0.4s var(--ease);
+}
+
+.x-next {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.34rem;
+  padding-top: 0.3rem;
+  border-top: 1px dashed var(--line);
+  text-align: left;
+}
+
+.x-node-check {
+  flex: 0 0 auto;
+  width: 0.7rem;
+  height: 0.7rem;
+  display: grid;
+  place-items: center;
+  border: 1.3px solid var(--line-strong);
+  border-radius: 50%;
+  color: transparent;
+  background: var(--surface);
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.x-node-check svg {
+  width: 0.4rem;
+  height: 0.4rem;
+}
+
+.x-next:hover .x-node-check {
+  border-color: var(--sage);
+  color: var(--sage);
+}
+
+.x-node-check.is-done {
+  border-color: var(--sage);
+  background: var(--sage);
+  color: #fffdf8;
+}
+
+.x-node-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.52rem;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.x-node-title.is-placeholder {
+  color: var(--faint);
+}
+
+.x-node-due {
+  flex: 0 0 auto;
+  font-size: 0.48rem;
+  color: var(--faint);
+  white-space: nowrap;
+}
+
+.x-node-due.overdue {
+  color: var(--danger);
+}
+
+.x-card.is-done {
+  opacity: 0.66;
+}
+
+.x-card.is-done .x-title {
+  text-decoration: line-through;
+  text-decoration-color: var(--faint);
+  color: var(--muted);
+}
+
+.x-card.is-done .x-pct {
+  color: var(--sage);
+}
+
+.x-card.is-done .x-bar span {
+  background: var(--sage);
+}
+
+.x-card.is-done .x-cat-tag {
+  color: var(--muted);
+}
+
+.x-done-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.24rem;
+  margin-top: 0.28rem;
+  font-size: 0.5rem;
+  color: var(--faint);
+}
+
+.x-done-meta svg {
+  width: 0.58rem;
+  height: 0.58rem;
+  color: var(--sage);
+}
+
+/* ---- 空态 ---- */
+
+.x-empty {
+  height: 100%;
+  min-height: 8rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.32rem;
+  padding: 1rem 0.9rem;
+  text-align: center;
+}
+
+.x-empty-art {
+  position: relative;
+  width: 2.6rem;
+  height: 2.6rem;
+  display: grid;
+  place-items: center;
+  margin-bottom: 0.12rem;
+  border: 1px dashed var(--line-strong);
+  border-radius: 50%;
+  color: var(--accent);
+}
+
+.x-empty-art::after {
+  content: "";
+  position: absolute;
+  inset: 0.44rem;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+}
+
+.x-empty-art svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.x-empty-title {
+  font-size: 0.64rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.x-empty-copy {
+  max-width: 11rem;
+  font-size: 0.52rem;
+  line-height: 1.7;
+  color: var(--faint);
+}
+
+/* ---- 快速添加 ---- */
+
+.x-add {
+  flex: 0 0 auto;
+  padding: 0.32rem 0.6rem 0.5rem;
+  border-top: 1px solid var(--line);
+  background: color-mix(in srgb, var(--surface) 26%, transparent);
+}
+
+.x-add form {
+  display: flex;
+  align-items: center;
+  gap: 0.24rem;
+  min-height: 1.95rem;
+  padding: 0.1rem 0.16rem 0.1rem 0.42rem;
+  border: 1px solid var(--line);
+  border-radius: 0.55rem;
+  background: color-mix(in srgb, var(--surface) 58%, transparent);
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+}
+
+.x-add form:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 46%, transparent);
+  background: var(--surface);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.x-cat {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.22rem;
+  height: 1.4rem;
+  padding: 0 0.4rem 0 0.1rem;
+  border-right: 1px solid var(--line);
+  font-size: 0.54rem;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.x-cat:hover {
+  color: var(--ink);
+}
+
+.x-cat .dot {
+  width: 0.28rem;
+  height: 0.28rem;
+}
+
+.x-add input {
+  flex: 1;
+  min-width: 0;
+  height: 1.55rem;
+  font-size: 0.62rem;
+  color: var(--ink);
+}
+
+.x-add input::placeholder {
+  color: var(--faint);
+}
+
+.x-send {
+  flex: 0 0 auto;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: grid;
+  place-items: center;
+  border-radius: 0.44rem;
+  background: var(--accent);
+  color: #fff8f2;
+  box-shadow: 0 0.16rem 0.42rem color-mix(in srgb, var(--accent) 32%, transparent);
+  transition: background 0.16s ease, transform 0.16s ease;
+}
+
+.x-send svg {
+  width: 0.72rem;
+  height: 0.72rem;
+}
+
+.x-send:hover {
+  background: var(--accent-deep);
+  transform: translateY(-1px);
+}
+
+.x-send:active {
+  transform: translateY(0);
+}
+
+/* ---- 右键 / 长按菜单 ---- */
+
+.ctx {
+  position: fixed;
+  z-index: 320;
+  min-width: 8.4rem;
+  padding: 0.26rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 0.55rem;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  font-size: 0.6rem;
+  color: var(--ink);
+  animation: ctx-in 0.13s var(--ease);
+}
+
+@keyframes ctx-in {
+  from { opacity: 0; transform: translateY(-3px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+.ctx button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.16rem;
+  padding: 0.36rem 0.42rem;
+  border-radius: 0.38rem;
+  font-size: 0.6rem;
+  text-align: left;
+  color: var(--ink-soft);
+}
+
+.ctx button:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.ctx-check {
+  width: 0.72rem;
+  flex: 0 0 auto;
+  text-align: center;
+  font-size: 0.52rem;
+  color: var(--accent);
+  opacity: 0;
+}
+
+.ctx button.is-checked .ctx-check {
+  opacity: 1;
+}
+
+.ctx-sep {
+  height: 1px;
+  margin: 0.2rem 0.3rem;
+  background: var(--line);
+}
+
+/* ---- toast：只在展开面板里出现 ---- */
+
+.toast-root {
+  z-index: 400;
+  bottom: 3.1rem;
+}
+
+.toast {
+  font-size: 0.58rem;
+  padding: 0.44rem 0.68rem;
+  border-radius: 0.5rem;
+  gap: 0.32rem;
+}
+
+html[data-widget-style="ball"] .toast-root,
+html[data-widget-style="buddy"] .toast-root,
+html[data-widget-style="custom"] .toast-root {
+  display: none;
+}
+
+/* ---- 小屏兜底：窗口固定尺寸，字号拉满时让列表更能滚 ---- */
+
+@media (max-height: 500px) {
+  .x-summary {
+    padding: 0.4rem 0.5rem;
+  }
+
+  .x-empty {
+    min-height: 6rem;
+  }
+}

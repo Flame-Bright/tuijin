@@ -1,0 +1,44 @@
+# ---------------- 构建产物 ----------------
+# 发布版由 dotnet publish 生成，不进版本库（体积大且可复现）
+release/推进/
+release/推进-*.zip
+native/Tuijin/bin/
+native/Tuijin/obj/
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+*.pdb
+*.dll
+*.exe
+!assets/*.ico
+!assets/*.png
+
+# ---------------- 本地依赖包目录 ----------------
+# NuGet.config 指向的离线包缓存，按需还原
+.nuget-local/
+
+# ---------------- 运行时数据 ----------------
+# 程序自己生成的数据、日志、缓存
+userdata/
+%APPDATA%/
+debug.log
+*.log
+data.json
+data.json.bak
+data.json.corrupt-*
+
+# ---------------- 编辑器 / 系统 ----------------
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# ---------------- 临时 / 草稿 ----------------
+*.tmp
+*.bak
+screenshots/*.tmp

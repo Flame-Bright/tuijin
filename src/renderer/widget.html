@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light" data-accent="clay" data-wallpaper="none" data-widget-style="ball">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://tuijin.wall https://tuijin.widget; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <link rel="icon" href="data:," />
+    <title>推进 · 桌面浮层</title>
+    <link rel="stylesheet" href="./base.css" />
+    <link rel="stylesheet" href="./widget.css" />
+  </head>
+  <body class="widget-body">
+    <div class="wallpaper-layer" aria-hidden="true"></div>
+
+    <!-- ------------------------------------------------ 悬浮球 136 × 136 -->
+    <div
+      class="stage stage-ball"
+      id="stageBall"
+      role="button"
+      tabindex="0"
+      aria-label="推进悬浮球，点击展开详情，按住可拖动"
+    >
+      <div class="ball-disc">
+        <span class="ball-grain" aria-hidden="true"></span>
+        <svg class="ball-ring progress-ring" viewBox="0 0 120 120" aria-hidden="true">
+          <circle class="ring-track" cx="60" cy="60" r="52"></circle>
+          <circle class="ring-value" id="ballRing" cx="60" cy="60" r="52"></circle>
+        </svg>
+        <div class="ball-core">
+          <span class="ball-pct" id="ballPct">0<span class="pct-sign">%</span></span>
+          <span class="ball-meta" id="ballMeta">还没有事</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ------------------------------------------------ 卡通人 176 × 208 -->
+    <section
+      class="stage stage-buddy"
+      id="stageBuddy"
+      data-mood="slump"
+      role="button"
+      tabindex="0"
+      aria-label="推进小人，点击展开详情，按住可拖动"
+    >
+      <div class="buddy-art" aria-hidden="true">
+        <svg class="buddy-svg" viewBox="0 0 120 140" preserveAspectRatio="xMidYMax meet" fill="none">
+          <defs>
+            <filter id="buddyWobble" x="-18%" y="-18%" width="136%" height="136%">
+              <feTurbulence
+                type="fractalNoise"
+                baseFrequency="0.026"
+                numOctaves="2"
+                seed="7"
+                result="noise"
+              />
+              <feDisplacementMap
+                in="SourceGraphic"
+                in2="noise"
+                scale="1.4"
+                xChannelSelector="R"
+                yChannelSelector="G"
+              />
+            </filter>
+          </defs>
+
+          <g filter="url(#buddyWobble)">
+            <!-- ===================== 0%：躺平丧 ===================== -->
+            <g class="pose pose-slump">
+              <path class="ln ground" d="M8 133c18-2 36-2 54-1s32 2 50-1" />
+              <!-- 摊在地上的身体 -->
+              <path
+                class="fl-cloth"
+                d="M40 104c10-6 30-7 42-2 6 3 8 8 5 11-4 4-14 6-26 6-11 0-20-2-23-5-3-2-2-7 2-10z"
+              />
+              <!-- 腿摊开 -->
+              <path class="ln" d="M87 110c8 1 14 4 17 8M88 117c8 2 13 5 15 9" />
+              <!-- 头歪在左边 -->
+              <circle class="fl-skin" cx="30" cy="108" r="13" />
+              <path class="ln" d="M18 104c2-6 8-9 14-8" />
+              <path class="fl-ink" d="M24.5 104.5h5.5M32.5 104h5" />
+              <path class="ln" d="M28 116c3 0 5-1 6-3" />
+              <!-- 垂下去的手 -->
+              <path class="ln" d="M50 116c-4 4-9 7-14 8" />
+              <path class="ln sigh" d="M96 98c3-4 7-4 9 0M101 92c2-3 5-3 6 0" />
+              <path class="ln sigh" d="M20 124h-8" />
+            </g>
+
+            <!-- ===================== 1–40%：刚起身 ===================== -->
+            <g class="pose pose-rise">
+              <path class="ln ground" d="M8 133c18-2 36-2 54-1s32 2 50-1" />
+              <path
+                class="fl-cloth"
+                d="M45 92c7-7 16-4 19 6 3 10 0 19-7 22-7 3-12-2-13-12-1-8 0-13 1-16z"
+              />
+              <path class="ln" d="M52 112c-2 8-5 14-10 19M60 112c3 8 5 15 5 21" />
+              <path class="ln" d="M41 131h-6M66 133h5" />
+              <circle class="fl-skin" cx="48" cy="68" r="13.5" />
+              <path class="ln" d="M35 63c3-7 12-10 19-6" />
+              <path class="fl-ink" d="M41 69.5l5-1.2M52 68.3l5-1" />
+              <path class="ln" d="M44 77c3 1 6 0 7-2" />
+              <!-- 撑地的手 -->
+              <path class="ln" d="M42 96c-6 5-10 11-11 18" />
+              <path class="ln" d="M31 114l-4 4" />
+              <path class="ln" d="M66 96c5 3 8 8 9 14" />
+              <path class="ln sigh" d="M74 110c3-2 6-2 8 1" />
+            </g>
+
+            <!-- ===================== 41–80%：使劲推 ===================== -->
+            <g class="pose pose-work">
+              <path class="ln ground" d="M8 133c18-2 36-3 54-1s30 1 50-2" />
+              <!-- 被推的球 -->
+              <circle class="fl-cloth" cx="93" cy="100" r="20" />
+              <path class="ln" d="M79 92c4-5 10-7 15-5M80 107c5 3 12 3 18 0" />
+              <path class="ln" d="M93 80v-5M73 100h-4M108 100h4M87 84l-4-3" />
+              <!-- 身体前倾 -->
+              <path
+                class="fl-cloth"
+                d="M34 74c8-5 16 0 18 10 2 9-1 17-8 19-7 2-12-4-13-14-1-8 1-12 3-15z"
+              />
+              <!-- 蹬地的腿 -->
+              <path class="ln" d="M40 104c-6 7-11 13-15 20M50 104c3 8 4 15 3 21" />
+              <path class="ln" d="M26 131h-6M55 132h6" />
+              <!-- 头 -->
+              <circle class="fl-skin" cx="42" cy="50" r="14" />
+              <path class="ln" d="M28 46c3-8 13-11 21-6" />
+              <path class="fl-ink" d="M34 51.5l6-1.6M47 50l6-1.6" />
+              <path class="ln" d="M36 59c3 2 7 1 9-1" />
+              <!-- 推的手 -->
+              <path class="ln" d="M50 80c10 3 18 7 24 11M48 90c10 2 18 5 23 8" />
+              <path class="fl-accent sweat" d="M66 36c2 3 3 5 1 7-2 1-4-1-3-3z" />
+              <path class="ln sigh" d="M26 116h-8M24 123h-6" />
+            </g>
+
+            <!-- ===================== 81–99%：就差一点 ===================== -->
+            <g class="pose pose-near">
+              <path class="ln ground" d="M8 133c18-2 36-2 54-1s32 2 50-1" />
+              <path
+                class="fl-accent star"
+                d="M97 20l3.4 7.8 8.2 1-6 5.9 1.4 8.2-7-3.7-7 3.7 1.4-8.2-6-5.9 8.2-1z"
+              />
+              <path class="ln trail" d="M67 44c8-4 16-5 22-3" />
+              <path
+                class="fl-cloth"
+                d="M42 66c7-4 15 0 17 9 2 9-1 17-8 19-7 2-13-4-14-13-1-8 1-12 5-15z"
+              />
+              <!-- 踮脚 -->
+              <path class="ln" d="M48 96c-4 8-7 16-8 24M56 96c4 8 5 16 4 25" />
+              <path class="ln" d="M40 132l-6 1M59 133l6 1" />
+              <circle class="fl-skin" cx="50" cy="42" r="14" />
+              <path class="ln" d="M36 38c4-8 15-10 22-4" />
+              <circle class="fl-ink" cx="45" cy="43" r="1.9" />
+              <circle class="fl-ink" cx="56" cy="42" r="1.9" />
+              <path class="ln" d="M47 51c3 2 7 2 9-1" />
+              <!-- 伸手够星星 -->
+              <path class="ln" d="M60 76c8-9 14-18 19-27" />
+              <path class="ln" d="M42 78c-7 0-12 2-16 6" />
+              <path class="ln sigh" d="M28 108h-8M31 116h-9" />
+            </g>
+
+            <!-- ===================== 100%：庆祝 ===================== -->
+            <g class="pose pose-party">
+              <ellipse cx="60" cy="132" rx="23" ry="3" fill="rgba(0,0,0,0.09)" />
+              <path class="ln ground" d="M14 132c18-2 34-2 50-1s28 1 46-2" />
+              <circle class="fl-accent" cx="22" cy="30" r="2.6" />
+              <circle class="fl-cloth" cx="101" cy="42" r="2.2" />
+              <circle class="fl-accent" cx="34" cy="16" r="1.8" />
+              <path class="ln confetti" d="M88 16l5 5M93 16l-5 5" />
+              <path class="ln confetti" d="M16 50h8M20 46v8" />
+              <!-- 蹦起来的身体 -->
+              <path
+                class="fl-cloth"
+                d="M48 68c8-3 15 2 16 11 1 9-3 16-10 18-7 2-12-4-13-13-1-8 2-13 7-16z"
+              />
+              <!-- 收起来的腿 -->
+              <path class="ln" d="M52 96c-6 8-9 16-10 23M60 96c5 7 8 14 9 21" />
+              <path class="ln" d="M39 131l-6 1M68 133l6 1" />
+              <circle class="fl-skin" cx="56" cy="44" r="14.5" />
+              <path class="ln" d="M42 40c4-8 15-10 22-4" />
+              <path class="fl-ink" d="M50 43l1.6 3.4 3.4 1.6-3.4 1.6L50 53l-1.6-3.4L45 48l3.4-1.6z" />
+              <path class="fl-ink" d="M65 42l1.5 3.2 3.2 1.5-3.2 1.5-1.5 3.2-1.5-3.2-3.2-1.5 3.2-1.5z" />
+              <path class="ln" d="M51 56c4 4 10 4 13-1" />
+              <!-- 举起的双手 -->
+              <path class="ln" d="M46 74c-7-7-11-15-13-23M66 74c7-7 11-15 13-23" />
+              <circle class="fl-accent" cx="38" cy="52" r="2.8" opacity="0.4" />
+              <circle class="fl-accent" cx="74" cy="51" r="2.8" opacity="0.4" />
+            </g>
+          </g>
+        </svg>
+      </div>
+
+
+      <div class="buddy-info">
+        <div class="buddy-row">
+          <span class="buddy-pct" id="buddyPct">0<span class="pct-sign">%</span></span>
+          <span class="buddy-mood" id="buddyMood">先躺一会儿</span>
+        </div>
+        <div class="buddy-label" id="buddyLabel">还没有事</div>
+      </div>
+    </section>
+
+    <!-- ------------------------------------------------ 自定义图片 176 × 208 -->
+    <section
+      class="stage stage-custom"
+      id="stageCustom"
+      role="button"
+      tabindex="0"
+      aria-label="推进桌面小人，点击展开详情，按住可拖动"
+    >
+      <div class="custom-shot" aria-hidden="true">
+        <img class="custom-img" id="customImg" alt="" draggable="false" />
+        <span class="custom-shade" aria-hidden="true"></span>
+        <span class="custom-empty" id="customEmpty" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="16" rx="3"></rect>
+            <circle cx="8.5" cy="9.5" r="1.6"></circle>
+            <path d="m5 17 4.5-4.5 3 2.5 3-3L20 17"></path>
+          </svg>
+          <span>还没有选图</span>
+        </span>
+      </div>
+
+      <div class="custom-info" id="customInfo">
+        <div class="custom-row">
+          <span class="custom-pct" id="customPct">0<span class="pct-sign">%</span></span>
+          <span class="custom-meta" id="customMeta">还没有事</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ------------------------------------------------ 展开面板 384 × 580 -->
+    <section class="stage stage-expanded" id="stageExpanded" aria-label="推进详情面板">
+      <header class="x-head" id="xHead">
+        <span class="x-logo" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path
+              d="M6.6 15.8l3.4-3.5 2.8 2.3 4.2-6"
+              stroke="currentColor"
+              stroke-width="1.9"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <circle cx="17.1" cy="8.6" r="1.5" fill="currentColor" />
+          </svg>
+        </span>
+        <div class="x-brand">
+          <div class="x-name">推进</div>
+          <div class="x-date" id="xDate">11月6日 周四</div>
+        </div>
+        <div class="x-actions">
+          <button class="icon-btn" id="xPin" type="button" title="切换置顶" aria-label="切换置顶">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 4h6l-1 5 3 3v2h-5v6l-1 1-1-1v-6H5v-2l3-3-1-5Z" />
+            </svg>
+          </button>
+          <button class="icon-btn" id="xMenuBtn" type="button" title="更多" aria-label="更多">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <circle cx="5" cy="12" r="0.6" /><circle cx="12" cy="12" r="0.6" /><circle cx="19" cy="12" r="0.6" />
+            </svg>
+          </button>
+          <button class="icon-btn" id="xCollapse" type="button" title="收起" aria-label="收起面板">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m6 10 6 6 6-6" />
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- 没置顶时提醒一下：被别的窗口挡住不等于丢了 -->
+      <button class="x-pin-hint" id="xPinHint" type="button" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 4h6l-1 5 3 3v2h-5v6l-1 1-1-1v-6H5v-2l3-3-1-5Z" />
+        </svg>
+        <span>没开置顶，被别的窗口挡住时按 <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>D</kbd> 叫回来</span>
+        <span class="x-pin-hint-act">开</span>
+      </button>
+
+      <section class="x-summary" aria-label="进度概览">
+        <div class="x-ring-wrap">
+          <svg class="x-ring progress-ring" viewBox="0 0 120 120" aria-hidden="true">
+            <circle class="ring-track" cx="60" cy="60" r="52"></circle>
+            <circle class="ring-value" id="xRing" cx="60" cy="60" r="52"></circle>
+          </svg>
+          <span class="x-ring-pct" id="xRingPct">0<span class="pct-sign">%</span></span>
+        </div>
+        <div class="x-sum-text">
+          <div class="x-sum-top">
+            <span class="x-sum-note" id="xSumNote">还没有在推进的事</span>
+            <span class="x-sum-due" id="xSumDue"></span>
+          </div>
+          <div class="x-sum-bar"><span id="xSumBar" style="width: 0%"></span></div>
+          <div class="x-sum-sub" id="xSumSub">把模糊的事，推进一步</div>
+        </div>
+      </section>
+
+      <div class="x-tabs" role="tablist" aria-label="任务状态">
+        <button class="x-tab is-active" type="button" role="tab" data-tab="active" aria-selected="true">
+          进行中 <span class="x-tab-count" id="xActiveCount">0</span>
+        </button>
+        <button class="x-tab" type="button" role="tab" data-tab="done" aria-selected="false">
+          已完成 <span class="x-tab-count" id="xDoneCount">0</span>
+        </button>
+      </div>
+
+      <div class="x-list" id="xList" role="tabpanel"></div>
+
+      <div class="x-add">
+        <form id="xForm" autocomplete="off">
+          <button class="x-cat" id="xCat" type="button" title="切换分类">
+            <span class="dot" id="xCatDot"></span>
+            <span id="xCatName">生活</span>
+          </button>
+          <input id="xInput" type="text" maxlength="120" placeholder="想做点什么？回车添加" aria-label="新任务名称" />
+          <button class="x-send" type="submit" aria-label="添加任务">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- 右键 / 长按菜单（收起态窗口装不下，只在展开面板出现） -->
+    <div class="ctx" id="ctxMenu" role="menu" hidden>
+      <button type="button" role="menuitem" data-menu="main">打开工作台</button>
+      <div class="ctx-sep" role="separator"></div>
+      <button type="button" role="menuitem" data-menu="ball">
+        <span class="ctx-check" data-check="ball">✓</span>悬浮球形态
+      </button>
+      <button type="button" role="menuitem" data-menu="buddy">
+        <span class="ctx-check" data-check="buddy">✓</span>卡通人形态
+      </button>
+      <button type="button" role="menuitem" data-menu="custom">
+        <span class="ctx-check" data-check="custom">✓</span>自己的图
+      </button>
+      <div class="ctx-sep" role="separator"></div>
+      <button type="button" role="menuitem" data-menu="pin" id="ctxPin">置顶显示</button>
+      <button type="button" role="menuitem" data-menu="hide">隐藏到托盘</button>
+    </div>
+
+    <div class="toast-root" id="toastRoot"></div>
+
+    <script src="./webview-api.js"></script>
+    <script type="module" src="./widget.js"></script>
+  </body>
+</html>
