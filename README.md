@@ -4,6 +4,8 @@
 
 一个本地运行的桌面进度管理程序：把想做的事写下来，给它设一个完成度，再拆成几个能真正开始的小节点。左边是工作台，右边是一张可以一直放在桌面上的进度卡片。
 
+> **要用代码改这个项目？** 先读 [AGENTS.md](AGENTS.md)（架构与边界）和 [开发指南.md](开发指南.md)（构建与环境）。
+
 ## 直接运行
 
 双击：
@@ -167,11 +169,18 @@ dotnet publish native\Tuijin\Tuijin.csproj -c Release -r win-x64 --self-containe
 
 ```
 assets\             应用图标、托盘图标
-native\Tuijin\      C# / WinForms + WebView2 宿主
-src\renderer\       界面（HTML / CSS / JS）
-release\推进\       可直接运行的发布版
+native\Tuijin\      C# / WinForms + WebView2 宿主（7 个 .cs，约 2800 行）
+src\renderer\       界面（HTML / CSS / JS，无构建步骤，9 个文件）
+release\推进\       可直接运行的发布版（构建产物，不进版本库）
 screenshots\        界面截图
 scripts\            图标生成脚本
-改造契约.md          外观 / 浮层改造的接口约定（改界面和宿主前先读）
-自检清单.md          发布前逐条核对
+
+AGENTS.md            ★ 接手开发先读这个：架构、边界、踩过的坑
+开发指南.md           从 clone 到发布的完整流程，含常见问题排查
+改造契约.md           宿主 / 浮层 / 工作台三方共享的接口约定
+自检清单.md           发布前逐条核对
+错误复盘-启动失败排查.md  一次真实故障的完整排查记录
 ```
+
+> 想改这个项目？先看 [AGENTS.md](AGENTS.md)，再看 [开发指南.md](开发指南.md)。
+
